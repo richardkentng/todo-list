@@ -22,6 +22,9 @@ function onSubmitTodoForm(e) {
     createdTime: Date.now(),
   };
 
+  //clear todo input
+  todoInput.value = "";
+
   // add one todo to local storage
   const savedTodos = getTodos();
   savedTodos.push(newTodo);
