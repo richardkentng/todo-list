@@ -196,8 +196,22 @@ function toggleDoneTodo(todoId) {
 }
 
 function deleteTodo(todoId) {
-  const todos = getTodos().filter((todo) => todo.id !== todoId);
+  let todos = getTodos();
+  const originalLength = todos.length;
+  todos = todos.filter((todo) => todo.id !== todoId);
+  const newLength = todos.length;
   save_display_todos(todos);
+
+  //address deletion issue for old todos without ids:
+  if (newLength === originalLength) {
+    //if nothing was deleted, then the todo-history is using an outdated object schema that lacks an 'id' property
+    //  add ids to all todos that do not have ids, so that the delete button will work for all todos
+    const todosFixed = todos.map((todo) => {
+      if (!todo.id) todo.id === getRandomString();
+      return todo;
+    });
+    save_display_todos(todosFixed);
+  }
 }
 
 function save_display_todos(todos) {
