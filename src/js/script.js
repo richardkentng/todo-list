@@ -16,7 +16,6 @@ todoList.addEventListener("click", onClickTodoList);
 
 function onSubmitTodoForm(e) {
   e.preventDefault();
-
   //create todo object
   const newTodo = {
     id: getRandomString(),
@@ -36,18 +35,39 @@ function onSubmitTodoForm(e) {
 }
 
 function onClickTodoList(e) {
-  //the following nested if-statements represent the hierarchy of elements from which
-  //the click originated.  If the if-statement is true, it means it has been clicked into.
-  const todoItem = checkPath(e.path, ".todo-item");
-  if (todoItem) {
-    //HEIRARCHY: todoItem
-    const button = checkPath(e.path, "button", todoItem);
-    if (button) {
-      //HEIRARCHY: todoItem > button
-      //determine which button was clicked, take according action
-      const btnFunction = button.dataset.function;
-      if (btnFunction === "toggleDoneTodo") toggleDoneTodo(todoItem.id);
-      else if (btnFunction === "deleteTodo") deleteTodo(todoItem.id);
+  //Create a 'path': an array of elements that represents the nesting structure of the clicked element
+  //  This will be used to decide the hierarchicial context of what was clicked on
+  //  For example, questions like these can be answered:
+  //   Did the click occur inside an element with a class of .todo-item?
+  //      Relevance: among the path elements, look for an element with that class
+  //   If the above is true, did the click take place inside a button element?
+  //      Relevance: among the path elements, look for an element with a class of button, whose index is smaller than the that of the element found above
+
+  //populate path:
+  const path = [];
+  let walker = e.target;
+  while (walker !== document.body.parentElement) {
+    path.push(walker);
+    walker = walker.parentElement;
+  }
+
+  //The following nested if-statements represent the hierarchy of elements from which-
+  //-the click originated.  If the if-statement is true, then it means the element in the condition has been clicked into.
+
+  const todoList = checkPath(path, ".todo-list");
+  if (todoList) {
+    //HEIRARCHY: todoList
+    const todoItem = checkPath(path, ".todo-item", todoList, true);
+    if (todoItem) {
+      //HEIRARCHY: todoList > todoItem
+      const button = checkPath(path, "button", todoItem, true);
+      if (button) {
+        //HEIRARCHY: todoList > todoItem > button
+        //determine which button was clicked based on its dataset.function value, then run the appropriate function
+        const btnFunction = button.dataset.function;
+        if (btnFunction === "toggleDoneTodo") toggleDoneTodo(todoItem.id);
+        else if (btnFunction === "deleteTodo") deleteTodo(todoItem.id);
+      }
     }
   }
 }
@@ -67,20 +87,23 @@ function onClickTodoList(e) {
 function checkPath(
   pathEls,
   selectorStringOrder,
-  cutoffElement = document.body.parentElement
+  cutoffElement,
+  immediateMatch = false
 ) {
   //*** The 'cutoffElement', if provided, will constrain the pathEls to a smaller array
-  //that is closer to the clicked element (NOT inclusive of cutoffElement)
-  const cutoffElement_index = pathEls.findIndex(
-    (pathEl) => pathEl === cutoffElement
-  );
-  const cannotFindCutoffElementInPath = !(cutoffElement_index >= 0);
-  if (cannotFindCutoffElementInPath) {
-    console.error("Failed to find cutoffElement in path:", cutoffElement);
-    return;
+  //that is heirarchically closer to the clicked element (NOT inclusive of cutoffElement)
+
+  if (cutoffElement) {
+    const cutoffElement_index = pathEls.findIndex(
+      (pathEl) => pathEl === cutoffElement
+    );
+    const cannotFindCutoffElementInPath = !(cutoffElement_index >= 0);
+    if (cannotFindCutoffElementInPath) {
+      console.error("Failed to find cutoffElement in path:", cutoffElement);
+      return;
+    }
+    pathEls = pathEls.slice(0, cutoffElement_index); //✔️ pathEls has been shortened
   }
-  pathEls = pathEls.slice(0, cutoffElement_index);
-  //✔️ pathEls has been shortened
 
   const milestones = selectorStringOrder.trim().split(/ +/);
   //milestones represent the selector-like strings for which we aim to find in pathEls
@@ -103,6 +126,16 @@ function checkPath(
       }
       //else: update milestone being checked
       updateMilestone();
+      //if there is no match AND an immediateMatch is required AND we just finished testing the first pathEl, then return error message:
+    } else if (immediateMatch && i === pathEls.length - 1) {
+      console.group("immediateMatch failed");
+      console.error(
+        "An immediateMatch was required, but the following pathEl does not match the specified tag/id/class chunk:"
+      );
+      console.log(pathEl);
+      console.log(milestone);
+      console.groupEnd("immediateMatch failed");
+      return;
     }
   }
   return;
