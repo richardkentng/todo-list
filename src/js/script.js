@@ -4,8 +4,16 @@ const todoForm = document.body.querySelector(".todo-form");
 const todoInput = todoForm.querySelector("#todo-input");
 const todoList = document.body.querySelector(".todo-list");
 const todoItems = document.body.querySelectorAll(".todo-item");
+let elementsBeingAnimated = [];
 
-displayTodos(getTodos());
+//give all todos an id that starts with a letter (necessary for query selection later on)
+const todosWithGoodIds = getTodos().map((todo) => {
+  todo.id = `a${getRandomString()}`;
+  return todo;
+});
+save_display_todos(todosWithGoodIds);
+
+// displayTodos(getTodos());
 
 todoForm.addEventListener("submit", onSubmitTodoForm);
 todoList.addEventListener("click", onClickTodoList);
@@ -16,10 +24,13 @@ todoList.addEventListener("click", onClickTodoList);
 
 function onSubmitTodoForm(e) {
   e.preventDefault();
+
+  if (!isUniqueText()) return;
+
   //create todo object
   const newTodo = {
-    id: getRandomString(),
-    text: todoInput.value,
+    id: `a${getRandomString()}`,
+    text: todoInput.value.trim(),
     done: false,
     doneTime: "",
     createdTime: Date.now(),
@@ -186,6 +197,21 @@ function checkPath(
   }
 }
 
+function isUniqueText() {
+  const todoWithSameTextObj = getTodos().find(
+    (todoObj) =>
+      todoObj.text.toLowerCase() === todoInput.value.trim().toLowerCase()
+  );
+  if (todoWithSameTextObj) {
+    const todoWithSameTextEl = document.body.querySelector(
+      `#${todoWithSameTextObj.id}`
+    );
+    animateJump(todoWithSameTextEl);
+    return false;
+  }
+  return true;
+}
+
 function toggleDoneTodo(todoId) {
   //inverse todo.done value of specific todo
   const todos = getTodos().map((todo) => {
@@ -246,4 +272,59 @@ function getRandomString() {
   return Math.random()
     .toString()
     .match(/[0-9]{2,}/)[0];
+}
+
+function animateJump(ele) {
+  //if there is an animation in progress, abort
+  const isElementBeingAnimated = elementsBeingAnimated.includes(ele);
+  if (isElementBeingAnimated) {
+    //then visually snap element to original position before continuing animation
+
+    //remove transition
+    ele.style.transition = "";
+    //reset position
+    ele.style.transform = "translateY(0)";
+    //remove from elementsBeingAnimated
+    elementsBeingAnimated = elementsBeingAnimated.filter(
+      (elem) => elem !== ele
+    );
+  }
+
+  //checkpoint: element is not being animated
+
+  elementsBeingAnimated.push(ele);
+
+  const originalBottomPosition = ele.getBoundingClientRect().bottom;
+
+  //enable animation capability & set duration
+  ele.style.transition = "transform 0.1s";
+
+  //listen for end of animations
+  ele.addEventListener("transitionend", onTransitionEnd);
+
+  //start upward animation
+  ele.style.transform = "translateY(-10px)";
+
+  //after a delay:
+  function onTransitionEnd() {
+    //this will run twice:
+    //  once when the element reaches max height,
+    //  and again when the element has returned to its original location
+
+    const elementIsAtMaxHeight =
+      ele.getBoundingClientRect().bottom !== originalBottomPosition;
+
+    if (elementIsAtMaxHeight) {
+      //start animation to move it back down
+      return (ele.style.transform = "translateY(0)");
+    }
+    //checkpoint: element is in original position
+
+    ele.removeEventListener("transitionend", onTransitionEnd);
+
+    //remove element from 'elementsBeingAnimated'
+    elementsBeingAnimated = elementsBeingAnimated.filter(
+      (elem) => elem !== ele
+    );
+  }
 }
