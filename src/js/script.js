@@ -62,24 +62,12 @@ function onClickTodoList(e) {
     walker = walker.parentElement;
   }
 
-  //The following nested if-statements represent the hierarchy of elements from which-
-  //-the click originated.  If the if-statement is true, then it means the element in the condition has been clicked into.
-
-  const todoList = checkPath(path, ".todo-list");
-  if (todoList) {
-    //HEIRARCHY: todoList
-    const todoItem = checkPath(path, ".todo-item", todoList, true);
-    if (todoItem) {
-      //HEIRARCHY: todoList > todoItem
-      const button = checkPath(path, "button", todoItem, true);
-      if (button) {
-        //HEIRARCHY: todoList > todoItem > button
-        //determine which button was clicked based on its dataset.function value, then run the appropriate function
-        const btnFunction = button.dataset.function;
-        if (btnFunction === "toggleDoneTodo") toggleDoneTodo(todoItem.id);
-        else if (btnFunction === "deleteTodo") deleteTodo(todoItem.id);
-      }
-    }
+  const button_todoItem = checkPath(path, "button .todo-item");
+  if (button_todoItem) {
+    //if click originated from a button inside a .todo-item element
+    const [button, todoItem] = button_todoItem;
+    //run a todo function based off of the dataset.todoAction value
+    window[`${button.dataset.todoAction}Todo`](todoItem.id);
   }
 }
 
@@ -252,8 +240,8 @@ function displayTodos(todoObjs) {
       return `
       <li class="todo-item ${todo.done ? "done" : ""}" id="${todo.id}">
          ${todo.text}
-         <button class="done-todo-btn" data-function="toggleDoneTodo">Done</button>
-         <button class="delete-todo-btn" data-function="deleteTodo">Delete</button>
+         <button class="done-todo-btn" data-todo-action="toggleDone">Done</button>
+         <button class="delete-todo-btn" data-todo-action="delete">Delete</button>
       </li>`;
     })
     .join("");
