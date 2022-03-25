@@ -4,19 +4,21 @@ const todoForm = document.body.querySelector(".todo-form");
 const todoInput = todoForm.querySelector("#todo-input");
 const todoList = document.body.querySelector(".todo-list");
 const todoItems = document.body.querySelectorAll(".todo-item");
+const sortByEl = document.body.querySelector("#sort-by");
 let elementsBeingAnimated = [];
 
-//give all todos an id that starts with a letter (necessary for query selection later on)
-const todosWithGoodIds = getTodos().map((todo) => {
-  todo.id = `a${getRandomString()}`;
-  return todo;
-});
-save_display_todos(todosWithGoodIds);
+//update sort-by preference from local storage
+sortByEl.value = localStorage.getItem("sortBy") || "oldest";
 
-// displayTodos(getTodos());
+displayTodos(getTodos());
+
+//=================================================/
+//--------------ADD EVENT LISTENERS ---------------/
+//=================================================/
 
 todoForm.addEventListener("submit", onSubmitTodoForm);
 todoList.addEventListener("click", onClickTodoList);
+sortByEl.addEventListener("change", onChange_sortByEl);
 
 //=================================================/
 //-----------------CORE FUNCTIONS -----------------/
@@ -36,13 +38,10 @@ function onSubmitTodoForm(e) {
     createdTime: Date.now(),
   };
 
-  //clear todo input
-  todoInput.value = "";
+  addTodo(newTodo);
 
-  // add one todo to local storage
-  const todos = getTodos();
-  todos.push(newTodo);
-  save_display_todos(todos);
+  //clear input
+  todoInput.value = "";
 }
 
 function onClickTodoList(e) {
@@ -71,9 +70,18 @@ function onClickTodoList(e) {
   }
 }
 
-//=================================================/
-//-----------------MORE FUNCTIONS -----------------/
-//=================================================/
+function onChange_sortByEl() {
+  localStorage.setItem("sortBy", sortByEl.value); //save sort-by choice
+  displayTodos(getTodos());
+}
+
+function sortTodos(todos) {
+  if (sortByEl.value === "newest")
+    todos.sort((a, b) => b.createdTime - a.createdTime);
+  else if (sortByEl.value === "oldest")
+    todos.sort((a, b) => a.createdTime - b.createdTime);
+  return todos;
+}
 
 //The 'checkPath' function verifies whether the clicked target is
 //surrounded by specific tag(s)/class(es)/id(s) in a specific order
@@ -200,6 +208,18 @@ function isUniqueText() {
   return true;
 }
 
+function addTodo(todo) {
+  const todos = getTodos();
+  todos.push(todo);
+  save_display_todos(todos);
+}
+
+function deleteTodo(todoId) {
+  let todos = getTodos();
+  todos = todos.filter((todo) => todo.id !== todoId);
+  save_display_todos(todos);
+}
+
 function toggleDoneTodo(todoId) {
   //inverse todo.done value of specific todo
   const todos = getTodos().map((todo) => {
@@ -209,31 +229,16 @@ function toggleDoneTodo(todoId) {
   save_display_todos(todos);
 }
 
-function deleteTodo(todoId) {
-  let todos = getTodos();
-  const originalLength = todos.length;
-  todos = todos.filter((todo) => todo.id !== todoId);
-  const newLength = todos.length;
-  save_display_todos(todos);
-
-  //address deletion issue for old todos without ids:
-  if (newLength === originalLength) {
-    //if nothing was deleted, then the todo-history is using an outdated object schema that lacks an 'id' property
-    //  add ids to all todos that do not have ids, so that the delete button will work for all todos
-    const todosFixed = todos.map((todo) => {
-      if (!todo.id) todo.id === getRandomString();
-      return todo;
-    });
-    save_display_todos(todosFixed);
-  }
+function getTodos() {
+  return JSON.parse(localStorage.getItem("todos")) || [];
 }
 
-function save_display_todos(todos) {
-  saveTodos(todos);
-  displayTodos(todos);
+function saveTodos(todoObjs) {
+  localStorage.setItem("todos", JSON.stringify(todoObjs));
 }
 
 function displayTodos(todoObjs) {
+  sortTodos(todoObjs);
   //map through todo objects to create HTML
   const todosStr = todoObjs
     .map((todo) => {
@@ -248,12 +253,9 @@ function displayTodos(todoObjs) {
   todoList.innerHTML = todosStr; //display todos
 }
 
-function getTodos() {
-  return JSON.parse(localStorage.getItem("todos")) || [];
-}
-
-function saveTodos(todoObjs) {
-  localStorage.setItem("todos", JSON.stringify(todoObjs));
+function save_display_todos(todos) {
+  saveTodos(todos);
+  displayTodos(todos);
 }
 
 function getRandomString() {
