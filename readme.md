@@ -21,3 +21,9 @@ A simple todo-list!
 - create toggle button to show/hide sort-by option
 - add todo below/above any todo
 - nest todos under other todos
+
+# Evolution
+
+![old page](./github_images/old-page.png)
+
+![main page](./github_images/main-page.png)
