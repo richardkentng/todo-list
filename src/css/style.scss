@@ -1,17 +1,45 @@
 @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400&display=swap");
 
+* {
+  box-sizing: border-box;
+}
+
 body {
   font-family: "Poppins", sans-serif;
-  background-color: lightblue;
+  background-color: rgb(152, 159, 108);
+}
+
+label[for="todo-input"] {
+  display: block;
 }
 
 .todo-list {
   display: flex;
   flex-direction: column;
+  width: 100%;
+  max-width: 400px;
+  padding: 0.2em;
   list-style: none;
+  border: solid rgb(205, 221, 148) 5px;
+  border-radius: 0.2em;
+  .todo-item {
+    display: flex;
+    justify-content: space-between;
+    background-color: rgb(205, 221, 148);
+    padding: 0.2em;
+    margin: 0.1em;
+    border-radius: 0.2em;
+    box-shadow: 0 0 3px 3px rgba(0, 0, 0, 0.1);
+    .todo-text {
+      padding: 0.1em 0.5em;
+      margin-right: auto;
+      overflow: hidden;
+    }
+  }
 }
-
-.done {
-  text-decoration: line-through;
+.todo-item.done {
+  .todo-text {
+    text-decoration: line-through;
+  }
   opacity: 0.4;
 }
