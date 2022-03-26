@@ -273,8 +273,8 @@ function displayTodos(todoObjs) {
     .map((todo) => {
       return `
       <li class="todo-item ${todo.done ? "done" : ""}" id="${todo.id}">
+        <button class="done-todo-btn" data-todo-action="toggleDone">Done</button>
          <span class="todo-text" contenteditable>${todo.text}</span>
-         <button class="done-todo-btn" data-todo-action="toggleDone">Done</button>
          <button class="delete-todo-btn" data-todo-action="delete">Delete</button>
       </li>`;
     })
