@@ -13,7 +13,7 @@ label[for=todo-input] {
 }
 
 .todo-list {
-  display: flex;
+  display: none;
   flex-direction: column;
   width: 100%;
   max-width: 400px;
@@ -42,6 +42,10 @@ label[for=todo-input] {
 }
 .todo-item.done .todo-text {
   text-decoration: line-through;
+}
+
+.d-flex {
+  display: flex;
 }
 
 /*# sourceMappingURL=style.css.map */
