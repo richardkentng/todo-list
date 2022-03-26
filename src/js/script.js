@@ -12,6 +12,34 @@ sortByEl.value = localStorage.getItem("sortBy") || "oldest";
 
 displayTodos(getTodos());
 
+//add the change event listener to all todo-text elements
+const todoTextEls = document.body.querySelectorAll(".todo-text");
+
+todoTextEls.forEach((todoTextEl) =>
+  todoTextEl.addEventListener("input", onInput_todoText)
+);
+
+function onInput_todoText() {
+  //update the textContent of a specific todo
+  const todoId = getOuterTodoId(this);
+
+  const todos = getTodos().map((todo) => {
+    if (todo.id === todoId) todo.text = this.textContent;
+    return todo;
+  });
+
+  saveTodos(todos);
+
+  //local function:
+  function getOuterTodoId(walker) {
+    while (!walker.classList.contains("todo-item")) {
+      walker = walker.parentElement;
+    }
+    return walker.id;
+  }
+}
+//  see if typing will trigger it
+
 //=================================================/
 //--------------ADD EVENT LISTENERS ---------------/
 //=================================================/
@@ -244,7 +272,7 @@ function displayTodos(todoObjs) {
     .map((todo) => {
       return `
       <li class="todo-item ${todo.done ? "done" : ""}" id="${todo.id}">
-         ${todo.text}
+         <span class="todo-text" contenteditable>${todo.text}</span>
          <button class="done-todo-btn" data-todo-action="toggleDone">Done</button>
          <button class="delete-todo-btn" data-todo-action="delete">Delete</button>
       </li>`;
