@@ -19,3 +19,5 @@ A simple todo-list!
 - shift + click to select multiple todos
 - show sort-by preference in url
 - create toggle button to show/hide sort-by option
+- add todo below/above any todo
+- nest todos under other todos
