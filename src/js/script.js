@@ -12,34 +12,6 @@ sortByEl.value = localStorage.getItem("sortBy") || "oldest";
 
 displayTodos(getTodos());
 
-//add the change event listener to all todo-text elements
-const todoTextEls = document.body.querySelectorAll(".todo-text");
-
-todoTextEls.forEach((todoTextEl) =>
-  todoTextEl.addEventListener("input", onInput_todoText)
-);
-
-function onInput_todoText() {
-  //update the textContent of a specific todo
-  const todoId = getOuterTodoId(this);
-
-  const todos = getTodos().map((todo) => {
-    if (todo.id === todoId) todo.text = this.textContent;
-    return todo;
-  });
-
-  saveTodos(todos);
-
-  //local function:
-  function getOuterTodoId(walker) {
-    while (!walker.classList.contains("todo-item")) {
-      walker = walker.parentElement;
-    }
-    return walker.id;
-  }
-}
-//  see if typing will trigger it
-
 //=================================================/
 //--------------ADD EVENT LISTENERS ---------------/
 //=================================================/
@@ -48,8 +20,13 @@ todoForm.addEventListener("submit", onSubmitTodoForm);
 todoList.addEventListener("click", onClickTodoList);
 sortByEl.addEventListener("change", onChange_sortByEl);
 
+const todoTextEls = document.body.querySelectorAll(".todo-text");
+todoTextEls.forEach((todoTextEl) =>
+  todoTextEl.addEventListener("input", onInput_todoText)
+);
+
 //=================================================/
-//-----------------CORE FUNCTIONS -----------------/
+//------------------- FUNCTIONS -------------------/
 //=================================================/
 
 function onSubmitTodoForm(e) {
@@ -95,6 +72,24 @@ function onClickTodoList(e) {
     const [button, todoItem] = button_todoItem;
     //run a todo function based off of the dataset.todoAction value
     window[`${button.dataset.todoAction}Todo`](todoItem.id);
+  }
+}
+
+function onInput_todoText() {
+  const todoId = getOuterTodoId(this);
+  const todos = getTodos().map((todo) => {
+    //update the textContent of a specific todo
+    if (todo.id === todoId) todo.text = this.textContent;
+    return todo;
+  });
+  saveTodos(todos);
+
+  //local function:
+  function getOuterTodoId(walker) {
+    while (!walker.classList.contains("todo-item")) {
+      walker = walker.parentElement;
+    }
+    return walker.id;
   }
 }
 
@@ -240,6 +235,12 @@ function addTodo(todo) {
   const todos = getTodos();
   todos.push(todo);
   save_display_todos(todos);
+
+  //listen for input on the .todo-text element
+  const todoTextEl = document.body.querySelector(
+    `.todo-item#${todo.id} .todo-text`
+  );
+  todoTextEl.addEventListener("input", onInput_todoText);
 }
 
 function deleteTodo(todoId) {
