@@ -267,7 +267,10 @@ function saveTodos(todoObjs) {
 }
 
 function displayTodos(todoObjs) {
+  toggleTodoListDisplay(todoObjs.length);
+
   sortTodos(todoObjs);
+
   //map through todo objects to create HTML
   const todosStr = todoObjs
     .map((todo) => {
@@ -279,7 +282,14 @@ function displayTodos(todoObjs) {
       </li>`;
     })
     .join("");
-  todoList.innerHTML = todosStr; //display todos
+
+  //display todos
+  todoList.innerHTML = todosStr;
+
+  //local function
+  function toggleTodoListDisplay(numOfTodos) {
+    todoList.classList[numOfTodos >= 1 ? "add" : "remove"]("d-flex");
+  }
 }
 
 function save_display_todos(todos) {
