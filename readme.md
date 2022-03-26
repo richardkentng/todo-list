@@ -21,6 +21,7 @@ A simple todo-list!
 - create toggle button to show/hide sort-by option
 - add todo below/above any todo
 - nest todos under other todos
+- when todo list is empty, address todo list border
 
 # Evolution
 
