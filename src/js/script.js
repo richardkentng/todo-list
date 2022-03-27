@@ -7,6 +7,10 @@ const todoItems = document.body.querySelectorAll(".todo-item");
 const todoTextEls = document.body.querySelectorAll(".todo-text");
 let elementsBeingAnimated = [];
 
+// ADDRESS OLDER CODE
+ensureEachTodoHasOrderValue();
+
+// DISPLAY TODOS
 displayTodos(getTodos());
 
 //=================================================/
@@ -30,7 +34,7 @@ function onSubmitTodoForm(e) {
 
   //create todo object
   const newTodo = {
-    id: `a${getRandomString()}`,
+    id: getRandomString(),
     text: todoInput.value.trim(),
     done: false,
     doneTime: "",
@@ -251,6 +255,8 @@ function displayTodos(todoObjs) {
   if (!todoObjs.length) return hide(todoList);
   else show(todoList);
 
+  todoObjs.sort((a, b) => a.order - b.order);
+
   const todosUI = todoObjs
     .map((todo) => {
       return `
@@ -280,9 +286,12 @@ function save_display_todos(todos) {
 }
 
 function getRandomString() {
-  return Math.random()
-    .toString()
-    .match(/[0-9]{2,}/)[0];
+  return (
+    "a" +
+    Math.random()
+      .toString()
+      .match(/[0-9]{2,}/)[0]
+  );
 }
 
 function animateJump(ele) {
@@ -338,4 +347,22 @@ function animateJump(ele) {
       (elem) => elem !== ele
     );
   }
+}
+
+//=================================================/
+//------- FUNCTIONS THAT ADDRESS OLDER CODE -------/
+//=================================================/
+
+function ensureEachTodoHasOrderValue() {
+  //each todo item must have an order value so that it's order in the todo list can be recorded and manipulated
+  const todos = getTodos();
+  if (!todos.length) return;
+  const allTodosLackOrderValue = todos.every(
+    (todo) => todo.order === undefined
+  );
+  if (!allTodosLackOrderValue) return;
+  for (let i = 0; i < todos.length; i++) {
+    todos[i].order = i + 1;
+  }
+  saveTodos(todos);
 }
