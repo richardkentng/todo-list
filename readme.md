@@ -1,6 +1,6 @@
 # [Todo List](https://2dl.netlify.app/)
 
-![main page](./github_images/main-page.png)
+![main page](./github_images/v3.png)
 
 # Description
 
@@ -28,6 +28,12 @@ A simple todo-list!
 
 # Evolution
 
-![old page](./github_images/old-page.png)
+![version 1](./github_images/v1.png)
 
-![main page](./github_images/main-page.png)
+![version 2](./github_images/v2.png)
+Changed color theme.  
+Adds a clear border around each todo-item.
+
+![version 3](./github_images/v3.png)
+Removed unecessary feature: Sort by newest/oldest.  
+Expanded todo-input.
