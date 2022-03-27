@@ -5,6 +5,7 @@
 # Description
 
 A simple todo-list!
+Uses local storage to remember todos after refreshing the page!
 
 # Ideas:
 
