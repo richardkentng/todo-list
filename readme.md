@@ -22,6 +22,9 @@ A simple todo-list!
 - add todo below/above any todo
 - nest todos under other todos
 - when todo list is empty, address todo list border
+- adds done/create/delete animation to todo-items
+- use icons buttons instead of text buttons
+- make a secondary todo-list (for less urgent items)
 
 # Evolution
 
