@@ -33,7 +33,7 @@ A simple todo-list!
 ![version 2](./github_images/v2.png)
 
 Changed color theme.  
-Adds a clear border around each todo-item.
+Added a clear border around each todo-item.
 
 ![version 3](./github_images/v3.png)
 
