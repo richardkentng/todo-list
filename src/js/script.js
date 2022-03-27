@@ -1,16 +1,13 @@
 console.log("sanity check");
 
+displayTodos(getTodos());
+
 const todoForm = document.body.querySelector(".todo-form");
 const todoInput = todoForm.querySelector("#todo-input");
 const todoList = document.body.querySelector(".todo-list");
 const todoItems = document.body.querySelectorAll(".todo-item");
-const sortByEl = document.body.querySelector("#sort-by");
+const todoTextEls = document.body.querySelectorAll(".todo-text");
 let elementsBeingAnimated = [];
-
-//update sort-by preference from local storage
-sortByEl.value = localStorage.getItem("sortBy") || "oldest";
-
-displayTodos(getTodos());
 
 //=================================================/
 //--------------ADD EVENT LISTENERS ---------------/
@@ -18,9 +15,6 @@ displayTodos(getTodos());
 
 todoForm.addEventListener("submit", onSubmitTodoForm);
 todoList.addEventListener("click", onClickTodoList);
-sortByEl.addEventListener("change", onChange_sortByEl);
-
-const todoTextEls = document.body.querySelectorAll(".todo-text");
 todoTextEls.forEach((todoTextEl) =>
   todoTextEl.addEventListener("input", onInput_todoText)
 );
@@ -91,19 +85,6 @@ function onInput_todoText() {
     }
     return walker.id;
   }
-}
-
-function onChange_sortByEl() {
-  localStorage.setItem("sortBy", sortByEl.value); //save sort-by choice
-  displayTodos(getTodos());
-}
-
-function sortTodos(todos) {
-  if (sortByEl.value === "newest")
-    todos.sort((a, b) => b.createdTime - a.createdTime);
-  else if (sortByEl.value === "oldest")
-    todos.sort((a, b) => a.createdTime - b.createdTime);
-  return todos;
 }
 
 //The 'checkPath' function verifies whether the clicked target is
@@ -267,12 +248,9 @@ function saveTodos(todoObjs) {
 }
 
 function displayTodos(todoObjs) {
-  toggleTodoListDisplay(todoObjs.length);
-
-  sortTodos(todoObjs);
-
-  //map through todo objects to create HTML
-  const todosStr = todoObjs
+  const todoList = document.body.querySelector(".todo-list");
+  hideOrShow(todoList, todoObjs.length);
+  const todosUI = todoObjs
     .map((todo) => {
       return `
       <li class="todo-item ${todo.done ? "done" : ""}" id="${todo.id}">
@@ -284,11 +262,11 @@ function displayTodos(todoObjs) {
     .join("");
 
   //display todos
-  todoList.innerHTML = todosStr;
+  todoList.innerHTML = todosUI;
 
-  //local function
-  function toggleTodoListDisplay(numOfTodos) {
-    todoList.classList[numOfTodos >= 1 ? "add" : "remove"]("d-flex");
+  //local functions
+  function hideOrShow(element, numOfTodos) {
+    element.classList[numOfTodos >= 1 ? "add" : "remove"]("d-flex");
   }
 }
 
