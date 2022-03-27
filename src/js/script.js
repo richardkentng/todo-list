@@ -1,13 +1,13 @@
 console.log("sanity check");
 
-displayTodos(getTodos());
-
 const todoForm = document.body.querySelector(".todo-form");
 const todoInput = todoForm.querySelector("#todo-input");
 const todoList = document.body.querySelector(".todo-list");
 const todoItems = document.body.querySelectorAll(".todo-item");
 const todoTextEls = document.body.querySelectorAll(".todo-text");
 let elementsBeingAnimated = [];
+
+displayTodos(getTodos());
 
 //=================================================/
 //--------------ADD EVENT LISTENERS ---------------/
@@ -248,8 +248,9 @@ function saveTodos(todoObjs) {
 }
 
 function displayTodos(todoObjs) {
-  const todoList = document.body.querySelector(".todo-list");
-  hideOrShow(todoList, todoObjs.length);
+  if (!todoObjs.length) return hide(todoList);
+  else show(todoList);
+
   const todosUI = todoObjs
     .map((todo) => {
       return `
@@ -265,8 +266,11 @@ function displayTodos(todoObjs) {
   todoList.innerHTML = todosUI;
 
   //local functions
-  function hideOrShow(element, numOfTodos) {
-    element.classList[numOfTodos >= 1 ? "add" : "remove"]("d-flex");
+  function hide(element) {
+    element.classList.remove("d-flex");
+  }
+  function show(element) {
+    element.classList.add("d-flex");
   }
 }
 
