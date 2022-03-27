@@ -36,5 +36,6 @@ Changed color theme.
 Adds a clear border around each todo-item.
 
 ![version 3](./github_images/v3.png)
+
 Removed unecessary feature: Sort by newest/oldest.  
 Expanded todo-input.
