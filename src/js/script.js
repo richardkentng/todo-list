@@ -5,10 +5,9 @@ const todoInput = todoForm.querySelector("#todo-input");
 const todoList = document.body.querySelector(".todo-list");
 const todoItems = document.body.querySelectorAll(".todo-item");
 const todoTextEls = document.body.querySelectorAll(".todo-text");
-let elementsBeingAnimated = [];
 
 // ADDRESS OLDER CODE
-ensureEachTodoHasOrderValue();
+conditionallyGiveAllTodosOrderValue();
 
 // DISPLAY TODOS
 displayTodos(getTodos());
@@ -17,10 +16,10 @@ displayTodos(getTodos());
 //--------------ADD EVENT LISTENERS ---------------/
 //=================================================/
 
-todoForm.addEventListener("submit", onSubmitTodoForm);
-todoList.addEventListener("click", onClickTodoList);
-todoTextEls.forEach((todoTextEl) =>
-  todoTextEl.addEventListener("input", onInput_todoText)
+todoForm.addEventListener("submit", onSubmitTodoForm); //adds todo
+todoList.addEventListener("click", onClickTodoList); //toggle done or delete todo
+todoTextEls.forEach(
+  (todoTextEl) => todoTextEl.addEventListener("input", onInput_todoText) //save text edits
 );
 
 //=================================================/
@@ -34,7 +33,7 @@ function onSubmitTodoForm(e) {
 
   //create todo object
   const newTodo = {
-    id: getRandomString(),
+    id: generateId(),
     text: todoInput.value.trim(),
     done: false,
     doneTime: "",
@@ -49,14 +48,7 @@ function onSubmitTodoForm(e) {
 
 function onClickTodoList(e) {
   //Create a 'path': an array of elements that represents the nesting structure of the clicked element
-  //  This will be used to decide the hierarchicial context of what was clicked on
-  //  For example, questions like these can be answered:
-  //   Did the click occur inside an element with a class of .todo-item?
-  //      Relevance: among the path elements, look for an element with that class
-  //   If the above is true, did the click take place inside a button element?
-  //      Relevance: among the path elements, look for an element with a class of button, whose index is smaller than the that of the element found above
-
-  //populate path:
+  //  ^will be used to determine the context of what was clicked on
   const path = [];
   let walker = e.target;
   while (walker !== document.body.parentElement) {
@@ -64,50 +56,28 @@ function onClickTodoList(e) {
     walker = walker.parentElement;
   }
 
+  //check if the click originated from a button, which was inside a .todo-item
   const button_todoItem = checkPath(path, "button .todo-item");
   if (button_todoItem) {
-    //if click originated from a button inside a .todo-item element
     const [button, todoItem] = button_todoItem;
-    //run a todo function based off of the dataset.todoAction value
-    window[`${button.dataset.todoAction}Todo`](todoItem.id);
+    // based on the button's function, do something
+    if (button.dataset.todoAction === "toggleDone") toggleDoneTodo(todoItem.id);
+    else if (button.dataset.todoAction === "delete") deleteTodo(todoItem.id);
   }
 }
 
-function onInput_todoText() {
-  const todoId = getOuterTodoId(this);
-  const todos = getTodos().map((todo) => {
-    //update the textContent of a specific todo
-    if (todo.id === todoId) todo.text = this.textContent;
-    return todo;
-  });
-  saveTodos(todos);
-
-  //local function:
-  function getOuterTodoId(walker) {
-    while (!walker.classList.contains("todo-item")) {
-      walker = walker.parentElement;
-    }
-    return walker.id;
-  }
-}
-
-//The 'checkPath' function verifies whether the clicked target is
-//surrounded by specific tag(s)/class(es)/id(s) in a specific order
-//  for every passed in tag/class/id (second argument), the function will
-//  return the respective discovered element(s) in the same order
-//      example call:       checkPath(e.path, "button .todo-item")
-//      example return:     [<button>click me</button>, <li class="todo-item"></li>]
-//          (if just one element is returned, it will not be returned as an array)
+//The 'checkPath' function:
+//  Given a path (an array of elements describing the nesting structure of a clicked element),
+//    and one or more css selectors,
+//    check if the elements in the path match the css selectors
+//    if everything matches, then return the matched elements, else return undefined
 
 function checkPath(
-  pathEls,
-  selectorStringOrder,
-  cutoffElement,
-  immediateMatch = false
+  pathEls, //eg. [<button>delete</button>, <div class="buttons"></div>, <li class="todo-item">wash dishes</li>, etc.]
+  selectorsStr, //eg. "button li.todo-item"
+  cutoffElement, //optional (if provided, will constrain pathEls to a smaller array (NOT inclusive of cutoffElement))
+  immediateMatch = false //if set to true: requires that the outermost pathEl matches the outermost selector
 ) {
-  //*** The 'cutoffElement', if provided, will constrain the pathEls to a smaller array
-  //that is heirarchically closer to the clicked element (NOT inclusive of cutoffElement)
-
   if (cutoffElement) {
     const cutoffElement_index = pathEls.findIndex(
       (pathEl) => pathEl === cutoffElement
@@ -120,51 +90,49 @@ function checkPath(
     pathEls = pathEls.slice(0, cutoffElement_index); //✔️ pathEls has been shortened
   }
 
-  const milestones = selectorStringOrder.trim().split(/ +/);
-  //milestones represent the selector-like strings for which we aim to find in pathEls
-  //eg. milestones:  ['button', '.todo-item']
+  const selectors = selectorsStr.trim().split(/ +/);
 
-  let milestoneIndex = milestones.length - 1;
-  let milestone = milestones[milestoneIndex];
-  const foundMilestones = [];
+  let selectorIndex = selectors.length - 1; //the position of the selector being checked for
+  let selector = selectors[selectorIndex]; //the selector being checked for
+  const matchingElements = []; //the elements that match selectors
 
   //loop through the path from the outer layer to the inner layer (toward the clicked element)
   for (let i = pathEls.length - 1; i >= 0; i--) {
     const pathEl = pathEls[i];
-    //    check if the current pathElement matches the current milestone
-    if (isMatch(pathEl, milestone)) {
-      foundMilestones.unshift(pathEl);
-      //if all milestones have been found
-      if (foundMilestones.length === milestones.length) {
-        if (foundMilestones.length === 1) return foundMilestones[0];
-        else return foundMilestones;
+    //    check if the current pathElement matches the current selector
+    if (isMatch(pathEl, selector)) {
+      matchingElements.unshift(pathEl);
+      //if all selectors have been found
+      if (matchingElements.length === selectors.length) {
+        if (matchingElements.length === 1) return matchingElements[0];
+        else return matchingElements;
       }
-      //else: update milestone being checked
-      updateMilestone();
-      //if there is no match AND an immediateMatch is required AND we just finished testing the first pathEl, then return error message:
+      //else: update selector being checked for
+      updateSelector();
+      //if there is no match AND an immediateMatch is required AND we just finished testing the outermost pathEl, then return error message:
     } else if (immediateMatch && i === pathEls.length - 1) {
       console.group("immediateMatch failed");
       console.error(
-        "An immediateMatch was required, but the following pathEl does not match the specified tag/id/class chunk:"
+        "An immediateMatch was required, but the following pathEl does not match the specified selector:"
       );
       console.log(pathEl);
-      console.log(milestone);
+      console.log(selector);
       console.groupEnd("immediateMatch failed");
       return;
     }
   }
   return;
 
-  function updateMilestone() {
-    milestoneIndex--;
-    milestone = milestones[milestoneIndex];
+  function updateSelector() {
+    selectorIndex--;
+    selector = selectors[selectorIndex];
   }
 
-  function isMatch(pathEl, concatenatedTagIdClasses) {
+  function isMatch(pathEl, selector) {
     //example arguments:  (<div class="some-class">lorem</div>, "someTagName.some-class#some-id")
     //      ** the second argument should have at least one among the following: tag/class/id
 
-    const tagIdClasses = getTagIdClasses(concatenatedTagIdClasses);
+    const tagIdClasses = getTagIdClasses(selector);
     //example return value:  ['someTagName', '.some-class', '.another-class', '#some-id']
 
     //loop through every tag/id/class^^
@@ -234,6 +202,24 @@ function deleteTodo(todoId) {
   save_display_todos(todos);
 }
 
+function onInput_todoText() {
+  const todoId = getOuterTodoId(this);
+  const todos = getTodos().map((todo) => {
+    //update the textContent of a specific todo
+    if (todo.id === todoId) todo.text = this.textContent;
+    return todo;
+  });
+  saveTodos(todos);
+
+  //local function:
+  function getOuterTodoId(walker) {
+    while (!walker.classList.contains("todo-item")) {
+      walker = walker.parentElement;
+    }
+    return walker.id;
+  }
+}
+
 function toggleDoneTodo(todoId) {
   //inverse todo.done value of specific todo
   const todos = getTodos().map((todo) => {
@@ -285,7 +271,7 @@ function save_display_todos(todos) {
   displayTodos(todos);
 }
 
-function getRandomString() {
+function generateId() {
   return (
     "a" +
     Math.random()
@@ -295,28 +281,23 @@ function getRandomString() {
 }
 
 function animateJump(ele) {
-  //if there is an animation in progress, abort
-  const isElementBeingAnimated = elementsBeingAnimated.includes(ele);
-  if (isElementBeingAnimated) {
-    //then visually snap element to original position before continuing animation
-
-    //remove transition
-    ele.style.transition = "";
-    //reset position
+  //if there is already an animation in progress, then reset element's transform, then redo animation
+  if (ele.dataset.animationState === "animating") {
+    //reset element's position
+    ele.style.transition = "transform 0.001s"; //<this duration, despite it being short, will still trigger onTransitionEnd()
     ele.style.transform = "translateY(0)";
-    //remove from elementsBeingAnimated
-    elementsBeingAnimated = elementsBeingAnimated.filter(
-      (elem) => elem !== ele
-    );
+    //this will redo the animation:
+    ele.dataset.animationNextStep = "redo";
+    return;
   }
 
-  //checkpoint: element is not being animated
+  //checkpoint: element is NOT being animated, so animate it!:
 
-  elementsBeingAnimated.push(ele);
+  ele.dataset.animationState = "animating";
 
   const originalBottomPosition = ele.getBoundingClientRect().bottom;
 
-  //enable animation capability & set duration
+  //enable animation & set duration
   ele.style.transition = "transform 0.1s";
 
   //listen for end of animations
@@ -325,27 +306,30 @@ function animateJump(ele) {
   //start upward animation
   ele.style.transform = "translateY(-10px)";
 
-  //after a delay:
   function onTransitionEnd() {
-    //this will run twice:
-    //  once when the element reaches max height,
-    //  and again when the element has returned to its original location
-
     const elementIsAtMaxHeight =
       ele.getBoundingClientRect().bottom !== originalBottomPosition;
 
     if (elementIsAtMaxHeight) {
-      //start animation to move it back down
-      return (ele.style.transform = "translateY(0)");
+      //1 the element is at MAX HEIGHT
+      // begin moving element back down
+      ele.style.transform = "translateY(0)";
+      return;
     }
-    //checkpoint: element is in original position
+    //2 the element is in ORIGINAL POSITION:
 
+    //remove event listener
     ele.removeEventListener("transitionend", onTransitionEnd);
 
-    //remove element from 'elementsBeingAnimated'
-    elementsBeingAnimated = elementsBeingAnimated.filter(
-      (elem) => elem !== ele
-    );
+    //reset animation state
+    ele.dataset.animationState = "";
+
+    //conditionally redo the animation (this occurs if the animation on a particular-
+    //  -element is triggered again, before the previous animation has finished)
+    if (ele.dataset.animationNextStep === "redo") {
+      ele.dataset.animationNextStep = "";
+      animateJump(ele);
+    }
   }
 }
 
@@ -353,7 +337,7 @@ function animateJump(ele) {
 //------- FUNCTIONS THAT ADDRESS OLDER CODE -------/
 //=================================================/
 
-function ensureEachTodoHasOrderValue() {
+function conditionallyGiveAllTodosOrderValue() {
   //each todo item must have an order value so that it's order in the todo list can be recorded and manipulated
   const todos = getTodos();
   if (!todos.length) return;
