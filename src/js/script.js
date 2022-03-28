@@ -4,7 +4,6 @@ const todoForm = document.body.querySelector(".todo-form");
 const todoInput = todoForm.querySelector("#todo-input");
 const todoList = document.body.querySelector(".todo-list");
 const todoItems = document.body.querySelectorAll(".todo-item");
-const todoTextEls = document.body.querySelectorAll(".todo-text");
 
 // ADDRESS OLDER CODE
 conditionallyGiveAllTodosOrderValue();
@@ -18,9 +17,6 @@ displayTodos(getTodos());
 
 todoForm.addEventListener("submit", onSubmitTodoForm); //adds todo
 todoList.addEventListener("click", onClickTodoList); //toggle done or delete todo
-todoTextEls.forEach(
-  (todoTextEl) => todoTextEl.addEventListener("input", onInput_todoText) //save text edits
-);
 
 //=================================================/
 //------------------- FUNCTIONS -------------------/
@@ -188,12 +184,6 @@ function addTodo(todo) {
   const todos = getTodos();
   todos.push(todo);
   save_display_todos(todos);
-
-  //listen for input on the .todo-text element
-  const todoTextEl = document.body.querySelector(
-    `.todo-item#${todo.id} .todo-text`
-  );
-  todoTextEl.addEventListener("input", onInput_todoText);
 }
 
 function deleteTodo(todoId) {
@@ -256,6 +246,12 @@ function displayTodos(todoObjs) {
 
   //display todos
   todoList.innerHTML = todosUI;
+
+  //assign input event listener to each .todo-text element
+  const todoTextEls = document.body.querySelectorAll(".todo-text");
+  todoTextEls.forEach(
+    (todoTextEl) => todoTextEl.addEventListener("input", onInput_todoText) //save text edits
+  );
 
   //local functions
   function hide(element) {
