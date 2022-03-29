@@ -93,6 +93,37 @@ h1 {
   opacity: 1;
 }
 
+.my-toast {
+  position: absolute;
+  z-index: 1;
+  height: 40px;
+  display: flex;
+  flex-direction: column;
+}
+.my-toast .arrow-icon {
+  transform: translateX(12px);
+}
+.my-toast .box {
+  transform: translateY(-9px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: white;
+  padding: 5px 10px;
+  border: solid black 1px;
+  border-radius: 5px;
+  box-shadow: 4px 4px 5px rgba(0, 0, 0, 0.2);
+}
+.my-toast .box .bang-icon {
+  color: orange;
+  font-size: x-large;
+  margin-right: 10px;
+}
+.my-toast .box .text {
+  color: black;
+  font-size: 14px;
+}
+
 .d-flex {
   display: flex;
 }

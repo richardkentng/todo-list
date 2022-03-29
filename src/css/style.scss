@@ -102,6 +102,44 @@ h1 {
   }
 }
 
+.my-toast {
+  position: absolute;
+  z-index: 1;
+  height: 40px;
+
+  display: flex;
+  flex-direction: column;
+
+  .arrow-icon {
+    transform: translateX(12px); //move right (to position above bang-icon)
+  }
+
+  .box {
+    transform: translateY(-9px); //move up (account for whitespace below arrow)
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background-color: white;
+
+    padding: 5px 10px;
+    border: solid black 1px;
+    border-radius: 5px;
+    box-shadow: 4px 4px 5px rgba(0, 0, 0, 0.2);
+
+    .bang-icon {
+      color: orange;
+      font-size: x-large;
+      margin-right: 10px;
+    }
+    .text {
+      color: black;
+      font-size: 14px;
+    }
+  }
+}
+
 // UTLITY RULES
 
 .d-flex {
