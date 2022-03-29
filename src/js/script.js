@@ -96,7 +96,9 @@ function isUniqueText() {
     const todoWithSameTextEl = document.body.querySelector(
       `#${todoWithSameTextObj.id}`
     );
-    animateJump(todoWithSameTextEl);
+    insertToast("Please enter a unique task.", todoInput, {
+      addMarginUnderEl: todoForm,
+    });
     return false;
   }
   return true;
@@ -109,59 +111,6 @@ function generateId() {
       .toString()
       .match(/[0-9]{2,}/)[0]
   );
-}
-
-function animateJump(ele) {
-  //if there is already an animation in progress, then reset element's transform, then redo animation
-  if (ele.dataset.animationState === "animating") {
-    //reset element's position
-    ele.style.transition = "transform 0.001s"; //<this duration, despite it being short, will still trigger onTransitionEnd()
-    ele.style.transform = "translateY(0)";
-    //this will redo the animation:
-    ele.dataset.animationNextStep = "redo";
-    return;
-  }
-
-  //checkpoint: element is NOT being animated, so animate it!:
-
-  ele.dataset.animationState = "animating";
-
-  const originalBottomPosition = ele.getBoundingClientRect().bottom;
-
-  //enable animation & set duration
-  ele.style.transition = "transform 0.1s";
-
-  //listen for end of animations
-  ele.addEventListener("transitionend", onTransitionEnd);
-
-  //start upward animation
-  ele.style.transform = "translateY(-10px)";
-
-  function onTransitionEnd() {
-    const elementIsAtMaxHeight =
-      ele.getBoundingClientRect().bottom !== originalBottomPosition;
-
-    if (elementIsAtMaxHeight) {
-      //1 the element is at MAX HEIGHT
-      // begin moving element back down
-      ele.style.transform = "translateY(0)";
-      return;
-    }
-    //2 the element is in ORIGINAL POSITION:
-
-    //remove event listener
-    ele.removeEventListener("transitionend", onTransitionEnd);
-
-    //reset animation state
-    ele.dataset.animationState = "";
-
-    //conditionally redo the animation (this occurs if the animation on a particular-
-    //  -element is triggered again, before the previous animation has finished)
-    if (ele.dataset.animationNextStep === "redo") {
-      ele.dataset.animationNextStep = "";
-      animateJump(ele);
-    }
-  }
 }
 
 //=================================================/
@@ -237,4 +186,37 @@ function conditionallyGiveAllTodosOrderValue() {
     todos[i].order = i + 1;
   }
   saveTodos(todos);
+}
+
+//=================================================/
+//--------------- UTILITY FUNCTIONS ---------------/
+//=================================================/
+
+function insertToast(text, refElement, options) {
+  const toastStr = `
+  <div class="my-toast">
+    <i class="arrow-icon bi-caret-up-fill"></i>
+    <div class="box">
+      <i class="bang-icon bi-exclamation-square-fill"></i>
+      <span class="text">${text}</span>
+    </div>
+  </div>`;
+  document.body.insertAdjacentHTML("beforeend", toastStr);
+  const toast = document.body.lastChild;
+  //position based on refElement:
+  const { x: refX, bottom: refBottom } = refElement.getBoundingClientRect();
+  toast.style.left = refX + window.scrollX + "px";
+  toast.style.top = refBottom + window.scrollY - 8 + "px"; //subtract 8 to adjust for the whitespace around arrow
+
+  const addMarginUnderEl = options.addMarginUnderEl;
+  if (addMarginUnderEl) {
+    addMarginUnderEl.style.marginBottom =
+      toast.getBoundingClientRect().height * 2 + "px";
+  }
+
+  //vanish after 3 seconds:
+  setTimeout(() => {
+    toast.remove();
+    if (addMarginUnderEl) addMarginUnderEl.style.marginBottom = "0";
+  }, 3000);
 }
