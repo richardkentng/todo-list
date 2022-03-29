@@ -1,6 +1,7 @@
 console.log("sanity check");
 
 const todoForm = document.body.querySelector(".todo-form");
+todoForm.addEventListener("submit", onSubmitTodoForm);
 const todoInput = todoForm.querySelector("#todo-input");
 const todoList = document.body.querySelector(".todo-list");
 const todoItems = document.body.querySelectorAll(".todo-item");
@@ -12,12 +13,6 @@ conditionallyGiveAllTodosOrderValue();
 displayTodos(getTodos());
 
 //=================================================/
-//--------------ADD EVENT LISTENERS ---------------/
-//=================================================/
-
-todoForm.addEventListener("submit", onSubmitTodoForm); //adds todo
-
-//=================================================/
 //------------------- FUNCTIONS -------------------/
 //=================================================/
 
@@ -26,7 +21,6 @@ function onSubmitTodoForm(e) {
 
   if (!isUniqueText()) return;
 
-  //create todo object
   const newTodo = {
     id: generateId(),
     text: todoInput.value.trim(),
@@ -34,79 +28,14 @@ function onSubmitTodoForm(e) {
     doneTime: "",
     createdTime: Date.now(),
   };
-
   addTodo(newTodo);
 
-  //clear input
-  todoInput.value = "";
-}
-
-function isUniqueText() {
-  const todoWithSameTextObj = getTodos().find(
-    (todoObj) =>
-      todoObj.text.toLowerCase() === todoInput.value.trim().toLowerCase()
-  );
-  if (todoWithSameTextObj) {
-    const todoWithSameTextEl = document.body.querySelector(
-      `#${todoWithSameTextObj.id}`
-    );
-    animateJump(todoWithSameTextEl);
-    return false;
-  }
-  return true;
-}
-
-function addTodo(todo) {
-  const todos = getTodos();
-  todos.push(todo);
-  save_display_todos(todos);
-}
-
-function deleteTodo() {
-  const todoId = getOuterTodoId(this);
-  let todos = getTodos();
-  todos = todos.filter((todo) => todo.id !== todoId);
-  save_display_todos(todos);
-}
-
-function onInput_todoText() {
-  const todoId = getOuterTodoId(this);
-  const todos = getTodos().map((todo) => {
-    //update the textContent of a specific todo
-    if (todo.id === todoId) todo.text = this.textContent;
-    return todo;
-  });
-  saveTodos(todos);
-}
-
-function getOuterTodoId(walker) {
-  while (!walker.classList.contains("todo-item")) {
-    walker = walker.parentElement;
-  }
-  return walker.id;
-}
-
-function toggleDoneTodo() {
-  const todoId = getOuterTodoId(this);
-  //inverse todo.done value of specific todo
-  const todos = getTodos().map((todo) => {
-    if (todo.id === todoId) todo.done = !todo.done;
-    return todo;
-  });
-  save_display_todos(todos);
-}
-
-function getTodos() {
-  return JSON.parse(localStorage.getItem("todos")) || [];
-}
-
-function saveTodos(todoObjs) {
-  localStorage.setItem("todos", JSON.stringify(todoObjs));
+  todoInput.value = ""; //clears input
 }
 
 function displayTodos(todoObjs) {
-  if (!todoObjs.length) return hide(todoList);
-  else show(todoList);
+  if (todoObjs.length === 0) hideTodoList();
+  else showTodoList();
 
   todoObjs.sort((a, b) => a.order - b.order);
 
@@ -126,12 +55,17 @@ function displayTodos(todoObjs) {
   editTodoItemEventListeners("add");
 
   //local functions
-  function hide(element) {
-    element.classList.remove("d-flex");
+  function hideTodoList() {
+    todoList.classList.remove("d-flex");
   }
-  function show(element) {
-    element.classList.add("d-flex");
+  function showTodoList() {
+    todoList.classList.add("d-flex");
   }
+}
+
+function save_display_todos(todos) {
+  saveTodos(todos);
+  displayTodos(todos);
 }
 
 function editTodoItemEventListeners(action) {
@@ -148,13 +82,24 @@ function editTodoItemEventListeners(action) {
   //save text edits:
   const todoTextEls = document.body.querySelectorAll(".todo-text");
   todoTextEls.forEach((todoTextEl) =>
-    todoTextEl[`${action}EventListener`]("input", onInput_todoText)
+    todoTextEl[`${action}EventListener`]("input", saveTodoText)
   );
 }
 
-function save_display_todos(todos) {
-  saveTodos(todos);
-  displayTodos(todos);
+function isUniqueText() {
+  //checks whether the text in the .todo-input is unique amongst the existing todos' text
+  const todoWithSameTextObj = getTodos().find(
+    (todoObj) =>
+      todoObj.text.toLowerCase() === todoInput.value.trim().toLowerCase()
+  );
+  if (todoWithSameTextObj) {
+    const todoWithSameTextEl = document.body.querySelector(
+      `#${todoWithSameTextObj.id}`
+    );
+    animateJump(todoWithSameTextEl);
+    return false;
+  }
+  return true;
 }
 
 function generateId() {
@@ -217,6 +162,63 @@ function animateJump(ele) {
       animateJump(ele);
     }
   }
+}
+
+//=================================================/
+//---------------- CRUD FUNCTIONS -----------------/
+//=================================================/
+
+function addTodo(todo) {
+  const todos = getTodos();
+  todos.push(todo);
+  save_display_todos(todos);
+}
+
+function deleteTodo() {
+  const todoId = getOuterTodoId(this);
+  let todos = getTodos();
+  todos = todos.filter((todo) => todo.id !== todoId);
+  save_display_todos(todos);
+}
+
+function saveTodoText() {
+  const todoId = getOuterTodoId(this);
+  const todos = getTodos().map((todo) => {
+    //update the textContent of a specific todo
+    if (todo.id === todoId) todo.text = this.textContent;
+    return todo;
+  });
+  saveTodos(todos);
+}
+
+function toggleDoneTodo() {
+  const todoId = getOuterTodoId(this);
+  //inverse todo.done value of specific todo
+  const todos = getTodos().map((todo) => {
+    if (todo.id === todoId) todo.done = !todo.done;
+    return todo;
+  });
+  save_display_todos(todos);
+}
+
+// HELPER FUNCTION FOR TODO ITEM EVENTS
+function getOuterTodoId(walker) {
+  while (!walker.classList.contains("todo-item")) {
+    walker = walker.parentElement;
+  }
+  return walker.id;
+}
+
+//=================================================/
+//---------------- LOCAL STORAGE ------------------/
+//=================================================/
+
+function getTodos() {
+  return JSON.parse(localStorage.getItem("todos")) || [];
+}
+
+function saveTodos(todoObjs) {
+  localStorage.setItem("todos", JSON.stringify(todoObjs));
 }
 
 //=================================================/
