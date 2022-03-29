@@ -16,7 +16,6 @@ displayTodos(getTodos());
 //=================================================/
 
 todoForm.addEventListener("submit", onSubmitTodoForm); //adds todo
-todoList.addEventListener("click", onClickTodoList); //toggle done or delete todo
 
 //=================================================/
 //------------------- FUNCTIONS -------------------/
@@ -42,129 +41,6 @@ function onSubmitTodoForm(e) {
   todoInput.value = "";
 }
 
-function onClickTodoList(e) {
-  //Create a 'path': an array of elements that represents the nesting structure of the clicked element
-  //  ^will be used to determine the context of what was clicked on
-  const path = [];
-  let walker = e.target;
-  while (walker !== document.body.parentElement) {
-    path.push(walker);
-    walker = walker.parentElement;
-  }
-
-  //check if the click originated from a button, which was inside a .todo-item
-  const button_todoItem = checkPath(path, "button .todo-item");
-  if (button_todoItem) {
-    const [button, todoItem] = button_todoItem;
-    // based on the button's function, do something
-    if (button.dataset.todoAction === "toggleDone") toggleDoneTodo(todoItem.id);
-    else if (button.dataset.todoAction === "delete") deleteTodo(todoItem.id);
-  }
-}
-
-//The 'checkPath' function:
-//  Given a path (an array of elements describing the nesting structure of a clicked element),
-//    and one or more css selectors,
-//    check if the elements in the path match the css selectors
-//    if everything matches, then return the matched elements, else return undefined
-
-function checkPath(
-  pathEls, //eg. [<button>delete</button>, <div class="buttons"></div>, <li class="todo-item">wash dishes</li>, etc.]
-  selectorsStr, //eg. "button li.todo-item"
-  cutoffElement, //optional (if provided, will constrain pathEls to a smaller array (NOT inclusive of cutoffElement))
-  immediateMatch = false //if set to true: requires that the outermost pathEl matches the outermost selector
-) {
-  if (cutoffElement) {
-    const cutoffElement_index = pathEls.findIndex(
-      (pathEl) => pathEl === cutoffElement
-    );
-    const cannotFindCutoffElementInPath = !(cutoffElement_index >= 0);
-    if (cannotFindCutoffElementInPath) {
-      console.error("Failed to find cutoffElement in path:", cutoffElement);
-      return;
-    }
-    pathEls = pathEls.slice(0, cutoffElement_index); //✔️ pathEls has been shortened
-  }
-
-  const selectors = selectorsStr.trim().split(/ +/);
-
-  let selectorIndex = selectors.length - 1; //the position of the selector being checked for
-  let selector = selectors[selectorIndex]; //the selector being checked for
-  const matchingElements = []; //the elements that match selectors
-
-  //loop through the path from the outer layer to the inner layer (toward the clicked element)
-  for (let i = pathEls.length - 1; i >= 0; i--) {
-    const pathEl = pathEls[i];
-    //    check if the current pathElement matches the current selector
-    if (isMatch(pathEl, selector)) {
-      matchingElements.unshift(pathEl);
-      //if all selectors have been found
-      if (matchingElements.length === selectors.length) {
-        if (matchingElements.length === 1) return matchingElements[0];
-        else return matchingElements;
-      }
-      //else: update selector being checked for
-      updateSelector();
-      //if there is no match AND an immediateMatch is required AND we just finished testing the outermost pathEl, then return error message:
-    } else if (immediateMatch && i === pathEls.length - 1) {
-      console.group("immediateMatch failed");
-      console.error(
-        "An immediateMatch was required, but the following pathEl does not match the specified selector:"
-      );
-      console.log(pathEl);
-      console.log(selector);
-      console.groupEnd("immediateMatch failed");
-      return;
-    }
-  }
-  return;
-
-  function updateSelector() {
-    selectorIndex--;
-    selector = selectors[selectorIndex];
-  }
-
-  function isMatch(pathEl, selector) {
-    //example arguments:  (<div class="some-class">lorem</div>, "someTagName.some-class#some-id")
-    //      ** the second argument should have at least one among the following: tag/class/id
-
-    const tagIdClasses = getTagIdClasses(selector);
-    //example return value:  ['someTagName', '.some-class', '.another-class', '#some-id']
-
-    //loop through every tag/id/class^^
-    for (let i = 0; i < tagIdClasses.length; i++) {
-      // if tag/id/class does NOT match the element, return false
-      if (!isMatch_element_tagClassId(pathEl, tagIdClasses[i])) return false;
-    }
-    return true;
-
-    //local functions:
-    function isMatch_element_tagClassId(ele, tagIdClass) {
-      switch (tagIdClass[0]) {
-        case ".":
-          const classWithoutDot = tagIdClass.replace(/^\./, "");
-          return ele.classList.contains(classWithoutDot);
-          break;
-        case "#":
-          const idWithoutNumSign = tagIdClass.replace(/^#/, "");
-          return ele.id === idWithoutNumSign;
-          break;
-        default:
-          const uppercaseTag = tagIdClass.toUpperCase();
-          return ele.tagName === uppercaseTag;
-          break;
-      }
-    }
-
-    function getTagIdClasses(str) {
-      const tags = str.match(/^[a-zA-Z]+/g) || [];
-      const classes = str.match(/\.[^\.#]+/g) || [];
-      const ids = str.match(/\#[^\.#]+/g) || [];
-      return tags.concat(classes).concat(ids);
-    }
-  }
-}
-
 function isUniqueText() {
   const todoWithSameTextObj = getTodos().find(
     (todoObj) =>
@@ -186,7 +62,8 @@ function addTodo(todo) {
   save_display_todos(todos);
 }
 
-function deleteTodo(todoId) {
+function deleteTodo() {
+  const todoId = getOuterTodoId(this);
   let todos = getTodos();
   todos = todos.filter((todo) => todo.id !== todoId);
   save_display_todos(todos);
@@ -200,17 +77,17 @@ function onInput_todoText() {
     return todo;
   });
   saveTodos(todos);
-
-  //local function:
-  function getOuterTodoId(walker) {
-    while (!walker.classList.contains("todo-item")) {
-      walker = walker.parentElement;
-    }
-    return walker.id;
-  }
 }
 
-function toggleDoneTodo(todoId) {
+function getOuterTodoId(walker) {
+  while (!walker.classList.contains("todo-item")) {
+    walker = walker.parentElement;
+  }
+  return walker.id;
+}
+
+function toggleDoneTodo() {
+  const todoId = getOuterTodoId(this);
   //inverse todo.done value of specific todo
   const todos = getTodos().map((todo) => {
     if (todo.id === todoId) todo.done = !todo.done;
@@ -244,14 +121,9 @@ function displayTodos(todoObjs) {
     })
     .join("");
 
-  //display todos
-  todoList.innerHTML = todosUI;
-
-  //assign input event listener to each .todo-text element
-  const todoTextEls = document.body.querySelectorAll(".todo-text");
-  todoTextEls.forEach(
-    (todoTextEl) => todoTextEl.addEventListener("input", onInput_todoText) //save text edits
-  );
+  editTodoItemEventListeners("remove");
+  todoList.innerHTML = todosUI; //display todos
+  editTodoItemEventListeners("add");
 
   //local functions
   function hide(element) {
@@ -260,6 +132,24 @@ function displayTodos(todoObjs) {
   function show(element) {
     element.classList.add("d-flex");
   }
+}
+
+function editTodoItemEventListeners(action) {
+  const doneTodoBtns = document.body.querySelectorAll(".done-todo-btn");
+  doneTodoBtns.forEach((btn) =>
+    btn[`${action}EventListener`]("click", toggleDoneTodo)
+  );
+
+  const deleteTodoBtns = document.body.querySelectorAll(".delete-todo-btn");
+  deleteTodoBtns.forEach((btn) =>
+    btn[`${action}EventListener`]("click", deleteTodo)
+  );
+
+  //save text edits:
+  const todoTextEls = document.body.querySelectorAll(".todo-text");
+  todoTextEls.forEach((todoTextEl) =>
+    todoTextEl[`${action}EventListener`]("input", onInput_todoText)
+  );
 }
 
 function save_display_todos(todos) {
