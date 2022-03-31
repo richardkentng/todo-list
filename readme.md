@@ -1,6 +1,6 @@
 # [Todo List](https://2dl.netlify.app/)
 
-![main page](./github_images/v3.png)
+![main page](./github_images/todolist1.gif)
 
 # Description
 
