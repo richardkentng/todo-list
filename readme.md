@@ -9,6 +9,8 @@ Uses local storage to remember todos after refreshing the page!
 
 # Ideas:
 
+- hide move-todo btn if there is only one todo
+- when move-todo btn is clicked show alert: You can click-and-drag this before or after other todos.
 - add sort-by dropdown. options: (oldest first, newest first, custom)
 - edit text content of todo
 - display how long ago todo item was created
