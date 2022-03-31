@@ -31,8 +31,7 @@ function onSubmitTodoForm(e) {
     id: generateId(),
     text: todoInput.value.trim(),
     done: false,
-    doneTime: "",
-    createdTime: Date.now(),
+    //'order' property is added during 'addTodo' function
   };
   addTodo(newTodo);
 
@@ -230,6 +229,7 @@ function generateId() {
 
 function addTodo(todo) {
   const todos = getTodos();
+  todo.order = todos.length + 1; //todo will be ordered last
   todos.push(todo);
   save_display_todos(todos);
 }
