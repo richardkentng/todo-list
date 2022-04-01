@@ -48,40 +48,64 @@ h1 {
   flex-direction: column;
   width: 100%;
   max-width: 400px;
-  padding: 0.2em;
+  background-color: #565b4d;
+  padding: 0.5em;
   list-style: none;
-  border: solid #cddd94 5px;
   border-radius: 0.2em;
 }
 .todo-list .todo-item {
   display: flex;
   justify-content: space-between;
   background-color: #cddd94;
-  padding: 0.2em;
-  margin: 0.1em;
+  padding: 0.3em;
   border-radius: 0.2em;
-  box-shadow: 0 0 3px 3px rgba(0, 0, 0, 0.1);
+  margin: 0.2em;
+}
+.todo-list .todo-item .move-todo-btn {
+  background-color: #b2bf85;
 }
 .todo-list .todo-item .todo-text {
   padding: 0.1em 0.5em;
   margin-right: auto;
   overflow: hidden;
 }
-
-.todo-item.done {
+.todo-list .todo-item.done {
+  background-color: #9da972;
+}
+.todo-list .todo-item.done button {
   opacity: 0.4;
 }
-.todo-item.done .todo-text {
+.todo-list .todo-item.done .todo-text {
   text-decoration: line-through;
+  opacity: 0.6;
 }
 
-.todo-item.bright {
-  filter: brightness(1.5);
+.todo-list .todo-placement-btn {
+  color: white;
+  background-color: #89917b;
+  height: 33px;
+  border-right: solid white 5px;
+  transform: translateX(25px);
 }
-.todo-item.top-border {
+.todo-list .todo-item .cancel-move-btn {
+  color: white;
+  background-color: #89917b;
+  padding: 0 1em;
+}
+.todo-list .todo-item.offset-brighten {
+  border-left: solid white 5px;
+  transform: translateX(-25px);
+}
+.todo-list .todo-item.offset-brighten .move-todo-btn {
+  transform: translateX(20px);
+}
+.todo-list .todo-item.offset-brighten .todo-text {
+  margin-left: 20px;
+}
+.todo-list .todo-item.top-border {
   border-top: solid white 8px;
 }
-.todo-item.bottom-border {
+.todo-list .todo-item.bottom-border {
   border-bottom: solid white 8px;
 }
 

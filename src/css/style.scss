@@ -3,8 +3,7 @@
 // VARIABLES
 
 $max-width: 400px;
-$dark-green: rgb(45, 62, 45);
-$light-green: rgb(205, 221, 148);
+$text-dark-green: rgb(45, 62, 45);
 
 // OVERALL RULES
 
@@ -28,7 +27,7 @@ button:hover {
 
 body {
   font-family: "Poppins", sans-serif;
-  color: $dark-green;
+  color: $text-dark-green;
   background-color: rgb(155, 160, 122);
   margin: 2rem;
 }
@@ -58,48 +57,77 @@ h1 {
   flex-direction: column;
   width: 100%;
   max-width: $max-width;
-  padding: 0.2em;
+  background-color: rgb(86, 91, 77);
+  padding: 0.5em;
   list-style: none;
-  border: solid $light-green 5px;
   border-radius: 0.2em;
   .todo-item {
     display: flex;
     justify-content: space-between;
-    background-color: $light-green;
-    padding: 0.2em;
-    margin: 0.1em;
+    background-color: rgb(205, 221, 148);
+    padding: 0.3em;
     border-radius: 0.2em;
-    box-shadow: 0 0 3px 3px rgba(0, 0, 0, 0.1);
+    margin: 0.2em;
+    .move-todo-btn {
+      background-color: rgb(178, 191, 133);
+    }
     .todo-text {
       padding: 0.1em 0.5em;
       margin-right: auto;
       overflow: hidden;
     }
+    &.done {
+      background-color: rgb(157, 169, 114);
+      button {
+        opacity: 0.4;
+      }
+      .todo-text {
+        text-decoration: line-through;
+        opacity: 0.6;
+      }
+    }
   }
 }
-.todo-item.done {
-  .todo-text {
-    text-decoration: line-through;
+
+// rules to apply when todos are being moved
+$placement-btn-bg: rgb(137, 145, 123);
+.todo-list {
+  .todo-placement-btn {
+    color: white;
+    background-color: $placement-btn-bg;
+    height: 33px;
+    border-right: solid white 5px;
+    transform: translateX(25px);
   }
-  opacity: 0.4;
-}
-// rules for when re-ordering todo item:
-.todo-item {
-  &.bright {
-    filter: brightness(1.5);
-  }
-  &.top-border {
-    border-top: solid white 8px;
-  }
-  &.bottom-border {
-    border-bottom: solid white 8px;
+  .todo-item {
+    .cancel-move-btn {
+      color: white;
+      background-color: $placement-btn-bg;
+      padding: 0 1em;
+    }
+    &.offset-brighten {
+      border-left: solid white 5px;
+      transform: translateX(-25px);
+      .move-todo-btn {
+        transform: translateX(20px);
+      }
+      .todo-text {
+        margin-left: 20px;
+      }
+    }
+    &.top-border {
+      border-top: solid white 8px;
+    }
+    &.bottom-border {
+      border-bottom: solid white 8px;
+    }
   }
 }
 
 .line {
   max-width: $max-width;
   opacity: 0.4;
-  border-bottom: solid $dark-green 2px;
+  border-bottom: solid $text-dark-green 2px;
   margin-top: 2rem;
 }
 
