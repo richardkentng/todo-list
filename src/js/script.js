@@ -48,7 +48,9 @@ function displayTodos(todoObjs) {
       <li class="todo-item ${todo.done ? "done" : ""}" id="${
         todo.id
       }" data-order="${todo.order}">
-        <button class="move-todo-btn"><i class="bi-arrow-down-up"></i></button>
+        <button class="move-todo-btn ${
+          todoObjs.length > 1 ? "" : "hide"
+        }"><i class="bi-arrow-down-up"></i></button>
         <span class="todo-text" contenteditable>${todo.text}</span>
         <button class="done-todo-btn" data-todo-action="toggleDone">Done</button>
         <button class="delete-todo-btn" data-todo-action="delete">Delete</button>
@@ -183,7 +185,7 @@ function onMouseDown_moveBtn() {
       return todo;
     });
 
-    moveTodoNewOrder = null; //prevents accidental re-ordering when normal clicking .move-btn
+    moveTodoNewOrder = null; //prevents accidental re-ordering when normal clicking .move-todo-btn
 
     todos.sort((a, b) => a.order - b.order);
 
