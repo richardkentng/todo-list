@@ -58,11 +58,14 @@ This reduced a lot of clutter, making it really easy to pinpoint key information
 - make .done style more obvious. Cross the text out with a thick line.
 - remove redundant click event listener for moving todos on mobile devices
 - be able to re order todos with middle mouse click-and-drag
+- allow todos to be nested under other todos
 - use icons buttons instead of text buttons
 - add animations to add todo, delete todo, move todo
 - hide move-todo btn if there is only one todo
 - when move-todo btn is clicked show alert: You can click-and-drag this before or after other todos.
-- add sort-by dropdown. options: (oldest first, newest first, custom)
+- add stopwatch or timer to todo
+- add color picker to choose overall color theme, the hue
+- allow picking a specific color per todo item
 - edit text content of todo
 - display how long ago todo item was created
 - drag to reorder
