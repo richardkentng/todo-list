@@ -4,7 +4,7 @@ const todoForm = document.body.querySelector(".todo-form");
 const todoInput = todoForm.querySelector("#todo-input");
 const todoList = document.body.querySelector(".todo-list");
 const todoItems = document.body.querySelectorAll(".todo-item");
-let moveTodoNewOrder = null;
+let moveTodoNewOrderGbl = null;
 
 // ADDRESS OLDER CODE
 conditionallyGiveAllTodosOrderValue();
@@ -58,9 +58,8 @@ function displayTodos(todoObjs) {
     })
     .join("");
 
-  editTodoItemEventListeners("remove");
   todoList.innerHTML = todosUI; //display todos
-  editTodoItemEventListeners("add");
+  addTodoItemEventListeners();
 
   //local functions
   function hideTodoList() {
@@ -76,34 +75,47 @@ function save_display_todos(todos) {
   displayTodos(todos);
 }
 
-function editTodoItemEventListeners(action) {
-  const doneTodoBtns = document.body.querySelectorAll(".done-todo-btn");
-  doneTodoBtns.forEach((btn) =>
-    btn[`${action}EventListener`]("click", toggleDoneTodo)
-  );
+function addTodoItemEventListeners() {
+  const selectorsEventsCallbacks = [
+    {
+      selector: ".done-todo-btn",
+      eventType: "click",
+      callback: toggleDoneTodo,
+    },
+    {
+      selector: ".delete-todo-btn",
+      eventType: "click",
+      callback: deleteTodo,
+    },
+    {
+      selector: ".todo-text",
+      eventType: "input",
+      callback: saveTodoText, //save text edits
+    },
+    {
+      selector: ".move-todo-btn",
+      eventType: "mousedown",
+      callback: onMouseDown_moveBtn, //click and drag to reorder todo
+    },
+    {
+      selector: ".move-todo-btn",
+      eventType: "click",
+      callback: onClick_moveBtn, //click to reorder todo
+    },
+  ];
 
-  const deleteTodoBtns = document.body.querySelectorAll(".delete-todo-btn");
-  deleteTodoBtns.forEach((btn) =>
-    btn[`${action}EventListener`]("click", deleteTodo)
-  );
-
-  //save text edits:
-  const todoTextEls = document.body.querySelectorAll(".todo-text");
-  todoTextEls.forEach((todoTextEl) =>
-    todoTextEl[`${action}EventListener`]("input", saveTodoText)
-  );
-
-  const moveTodoBtns = document.body.querySelectorAll(".move-todo-btn");
-  moveTodoBtns.forEach((moveBtn) => {
-    moveBtn[`${action}EventListener`]("mousedown", onMouseDown_moveBtn);
+  selectorsEventsCallbacks.forEach(({ selector, eventType, callback }) => {
+    const elements = document.body.querySelectorAll(selector);
+    elements.forEach((element) =>
+      element.addEventListener(eventType, callback)
+    );
   });
 }
 
 function onMouseDown_moveBtn() {
   const moveTodo = getOuterTodo(this);
-  moveTodo.classList.add("bright");
+  moveTodo.classList.add("offset-brighten");
   document.addEventListener("mousemove", onMouseMove_showTodoOrderLine);
-  //prettier-ignore
   document.addEventListener("mouseup", onMouseUp_afterMoveIcon, { once: true });
 
   function onMouseMove_showTodoOrderLine(mousemoveEvent) {
@@ -114,7 +126,7 @@ function onMouseDown_moveBtn() {
 
     //if there is no todo under mouse || the mouse is over the same todo
     if (!overTodo || overTodo === moveTodo) {
-      moveTodoNewOrder = null;
+      moveTodoNewOrderGbl = null;
       return;
     }
 
@@ -156,11 +168,11 @@ function onMouseDown_moveBtn() {
     }
     function showTopBorder_setOrder() {
       overTodo.classList.add("top-border");
-      moveTodoNewOrder = overTodoOrder - 0.5;
+      moveTodoNewOrderGbl = overTodoOrder - 0.5;
     }
     function showBottomBorder_setOrder() {
       overTodo.classList.add("bottom-border");
-      moveTodoNewOrder = overTodoOrder + 0.5;
+      moveTodoNewOrderGbl = overTodoOrder + 0.5;
     }
     function clearOrderBordersFromTodos() {
       document.body.querySelectorAll(".todo-item").forEach((todoEl) => {
@@ -173,29 +185,94 @@ function onMouseDown_moveBtn() {
   function onMouseUp_afterMoveIcon() {
     //disable hover to show order border effect
     document.removeEventListener("mousemove", onMouseMove_showTodoOrderLine);
-    moveTodo.classList.remove("bright");
-
-    if (moveTodoNewOrder === null) return;
-
-    //update order value of moveTodo
-    const todos = getTodos().map((todo) => {
-      if (todo.id === moveTodo.id) {
-        todo.order = moveTodoNewOrder;
-      }
-      return todo;
-    });
-
-    moveTodoNewOrder = null; //prevents accidental re-ordering when normal clicking .move-todo-btn
-
-    todos.sort((a, b) => a.order - b.order);
-
-    //set all todo.order values to integers
-    todos.forEach((todo, i) => {
-      todo.order = i + 1;
-    });
-
-    save_display_todos(todos);
+    moveTodo.classList.remove("offset-brighten");
+    if (moveTodoNewOrderGbl === null) return;
+    implementNewTodoOrder(moveTodo.id, moveTodoNewOrderGbl);
+    moveTodoNewOrderGbl = null; //prevents accidental re-ordering when clicking .move-todo-btn
   }
+}
+
+function onClick_moveBtn() {
+  //VISUALS:
+  //HIDE ALL .move-todo-btn to prevent duplicating placementBtns when spam-clicked
+  //  also HIDE ALL .done-todo-btn and all .delete-todo-btn for visually cleanliness
+  [".move-todo-btn, .done-todo-btn", ".delete-todo-btn"].forEach((selector) => {
+    const btns = document.body.querySelectorAll(selector);
+    btns.forEach((btn) => btn.classList.add("hide"));
+  });
+  //visually offset moveTodo
+  const moveTodo = getOuterTodo(this);
+  moveTodo.classList.add("offset-brighten");
+
+  //add cancel-move button
+  const cancelMoveBtn = document.createElement("button");
+  cancelMoveBtn.textContent = "cancel move";
+  cancelMoveBtn.classList.add("cancel-move-btn");
+  cancelMoveBtn.addEventListener("click", onClick_cancelMoveBtn);
+  function onClick_cancelMoveBtn(params) {
+    displayTodos(getTodos());
+  }
+  moveTodo.insertAdjacentElement("afterbegin", cancelMoveBtn);
+
+  //populate order_todoEl (will be used to check whether todos with a certain order value exists)
+  const order_todoEl = {};
+  const todoEls = document.body.querySelectorAll(".todo-item");
+  todoEls.forEach((todoEl) => {
+    order_todoEl[getOrder(todoEl)] = todoEl;
+  });
+  //add placement buttons (click on these buttons to place moveTodo at the button location)
+  const moveTodoOrder = getOrder(moveTodo);
+  addPlacementButtons(order_todoEl, moveTodoOrder, -1);
+  addPlacementButtons(order_todoEl, moveTodoOrder, 1);
+
+  //------------------------local functions-------------------------
+  function getOrder(todoEl) {
+    return parseInt(todoEl.dataset.order);
+  }
+
+  function addPlacementButtons(order_todoEl, startOrder, dir) {
+    let i = startOrder;
+    const respectiveLocation = dir === -1 ? "beforebegin" : "afterend";
+    while (true) {
+      i = i + dir;
+      const refTodo = order_todoEl[i]; //get a todo that will be used to position a placement button
+      if (!refTodo) return;
+      refTodo.insertAdjacentElement(respectiveLocation, createPlacementBtn());
+      //-----------------local function------------------
+      function createPlacementBtn() {
+        const btn = document.createElement("button");
+        btn.textContent = "move here";
+        btn.dataset.order = i + dir / 2;
+        btn.classList.add("todo-placement-btn");
+        btn.addEventListener("click", onClick_placementBtn);
+        return btn;
+
+        function onClick_placementBtn() {
+          const placementBtnOrder = parseFloat(this.dataset.order);
+          implementNewTodoOrder(moveTodo.id, placementBtnOrder);
+        }
+      }
+    }
+  }
+}
+
+function implementNewTodoOrder(moveTodoId, moveTodoNewOrder) {
+  //update order value of a specific todo: moveTodo
+  const todos = getTodos().map((todo) => {
+    if (todo.id === moveTodoId) {
+      todo.order = moveTodoNewOrder;
+    }
+    return todo;
+  });
+
+  todos.sort((a, b) => a.order - b.order);
+
+  //set all todo.order values to integers
+  todos.forEach((todo, i) => {
+    todo.order = i + 1;
+  });
+
+  save_display_todos(todos);
 }
 
 function isUniqueText() {
@@ -339,4 +416,8 @@ function insertToast(text, refElement, options) {
     toast.remove();
     if (addMarginUnderEl) addMarginUnderEl.style.marginBottom = "0";
   }, 3000);
+}
+
+function eventListener(element, action, eventType, callback) {
+  element[`${action}EventListener`](eventType, callback);
 }
