@@ -53,9 +53,6 @@ h1 {
   border: solid #cddd94 5px;
   border-radius: 0.2em;
 }
-.todo-list .move-btn:hover {
-  cursor: pointer;
-}
 .todo-list .todo-item {
   display: flex;
   justify-content: space-between;
@@ -139,6 +136,10 @@ h1 {
 
 .d-flex {
   display: flex;
+}
+
+.hide {
+  display: none;
 }
 
 /*# sourceMappingURL=style.css.map */

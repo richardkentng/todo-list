@@ -62,9 +62,6 @@ h1 {
   list-style: none;
   border: solid $light-green 5px;
   border-radius: 0.2em;
-  .move-btn:hover {
-    cursor: pointer;
-  }
   .todo-item {
     display: flex;
     justify-content: space-between;
@@ -159,4 +156,8 @@ h1 {
 
 .d-flex {
   display: flex;
+}
+
+.hide {
+  display: none;
 }
